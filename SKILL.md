@@ -1,108 +1,113 @@
 ---
 name: obsidian-openclaw-memory
-description: Set up Obsidian + OpenClaw as a living AI memory system. Use when helping users configure their workspace so their AI assistant remembers context across sessions, builds a knowledge graph, and proactively maintains memory. Covers file structure, Obsidian vault setup, QMD semantic search, and heartbeat-based memory maintenance.
+description: Build, organize, or improve an Obsidian-based memory workspace for OpenClaw. Use when setting up a vault, designing file structure for persistent AI memory, adding templates or dashboards, improving wiki-link graph structure, configuring Dataview/Templater workflows, or documenting how OpenClaw memory files, heartbeats, and semantic search should work together.
 ---
 
-# Obsidian + OpenClaw Memory System
+# Obsidian + OpenClaw Memory Workspace
 
-## Overview
+Treat this skill as a workspace-design and memory-operations guide. The goal is to make the workspace useful both to the human in Obsidian and to OpenClaw at runtime.
 
-The AI doesn't *have* memory — it *reads* memory. OpenClaw injects workspace files into the system prompt at session start, giving the AI persistent context across sessions. Obsidian visualizes the knowledge graph. QMD provides semantic search so the AI finds relevant context without loading everything.
+## Core model
 
-**Three components:**
-- **OpenClaw** — reads workspace files at session start (injected into system prompt)
-- **Obsidian** — vault pointed at the workspace; Graph View shows connections between files
-- **QMD** — on-device semantic search; find relevant files without loading them all
+Assume the system has three distinct layers:
 
-## File Structure
+1. **Runtime memory**: files OpenClaw reads directly (`AGENTS.md`, `SOUL.md`, `USER.md`, recent `memory/YYYY-MM-DD.md`, and sometimes `MEMORY.md` depending on session type)
+2. **Human knowledge layer**: notes, dashboards, concepts, journals, and project pages that are mainly browsed in Obsidian
+3. **Retrieval layer**: semantic search or indexing tools that help the agent find relevant context without loading everything
 
-See `references/file-structure.md` for the full annotated file tree.
+Design changes so these layers support each other instead of duplicating each other.
 
-Core files:
+## Do first
 
-| File/Folder | Purpose |
-|---|---|
-| `MEMORY.md` | Curated long-term memory (distilled from daily logs) |
-| `memory/YYYY-MM-DD.md` | Raw daily session logs |
-| `second-brain/` | Structured knowledge base (concepts, journal, documents) |
-| `directives/` | SOPs and workflows |
-| `HEARTBEAT.md` | Drives proactive AI behavior between sessions |
-| `AGENTS.md` | How the AI should operate in this workspace |
-| `USER.md` | Context about the human |
-| `SOUL.md` | AI persona and tone |
+1. Inspect the current workspace layout
+2. Identify whether the user wants one of these outcomes:
+   - initial setup
+   - restructuring an existing vault
+   - better templates / dashboards
+   - better long-term memory hygiene
+   - semantic-search integration
+   - graph-friendly linking and taxonomy
+3. Keep the runtime-critical files lightweight and high signal
+4. Prefer additive, reversible changes over disruptive reorganization
 
-## How OpenClaw Reads Files
+## Workspace design rules
 
-OpenClaw's workspace injection reads files listed in its config and prepends them to the system prompt. This means:
-- Files in the workspace root are always available
-- The AI "wakes up" each session already knowing what's in those files
-- Updating a file = updating what the AI knows next session
+- Keep root-level operational files concise because they are likely to be injected or read often
+- Separate **raw logs** from **curated memory**
+- Use folders with clear roles rather than one giant note pile
+- Prefer note links and shared vocabulary over excessive tags
+- Avoid storing secrets in files that may be widely read by agents
+- Do not turn `MEMORY.md` into a transcript dump
+- Keep heartbeat instructions short because they are checked repeatedly
 
-Key principle: **write important things to files, not just say them in chat.**
+## Recommended structure
 
-## Obsidian Setup
+Read `references/file-structure.md` when designing or explaining the vault layout.
 
-1. **Create vault** pointing to your `~/clawd` workspace folder (File → Open Vault → Open Folder as Vault)
-2. **Enable Graph View** (Ctrl/Cmd+G) — see how memory files link to each other
-3. **Install plugins:**
-   - **Dataview** — query memory files like a database (`TABLE, LIST, TASK` queries)
-   - **Templater** — daily note templates for `memory/YYYY-MM-DD.md`
-4. **Daily note template** (via Templater):
-   ```
-   # <% tp.date.now("YYYY-MM-DD") %>
-   
-   ## Session Log
-   
-   ## Decisions Made
-   
-   ## Things to Remember
-   ```
-5. **Dataview query** to surface recent memories:
-   ```dataview
-   LIST FROM "memory" SORT file.name DESC LIMIT 7
-   ```
+Use this baseline split:
 
-## QMD Semantic Search Setup
+- `MEMORY.md`: curated long-term memory
+- `memory/YYYY-MM-DD.md`: daily raw logs
+- `second-brain/`: human-oriented knowledge base
+- `directives/`: repeatable workflows and SOPs
+- `projects/`: project-specific working material
+- `templates/`: note templates for recurring note types
 
-```bash
-# Add workspace to QMD index
-qmd collection add ~/clawd --name clawd
+If the user wants a more complete vault, also read `references/obsidian-patterns.md`.
 
-# Generate embeddings (run after adding new files)
-qmd embed
+## Obsidian setup workflow
 
-# Search from within OpenClaw
-mcporter call qmd.vsearch query="what did we decide about X"
-mcporter call qmd.query query="project status"
-```
+When helping with Obsidian:
 
-This lets the AI find relevant context without loading every file into the context window.
+1. Point the vault at the OpenClaw workspace folder
+2. Enable core navigation features the user will actually use
+3. Add lightweight templates before adding fancy dashboards
+4. Create a small set of index notes instead of many orphaned notes
+5. Add Dataview queries only where they solve a real navigation problem
 
-## Heartbeat-Based Memory Maintenance
+For practical templates, dashboards, and note conventions, read `references/obsidian-patterns.md`.
 
-`HEARTBEAT.md` drives proactive AI behavior. OpenClaw polls it on a schedule and acts on what it finds.
+## Memory hygiene workflow
 
-Example `HEARTBEAT.md`:
-```markdown
-## Memory Maintenance
-- [ ] Review memory/ files from last 3 days
-- [ ] Distill key insights into MEMORY.md
-- [ ] Remove outdated entries from MEMORY.md
-```
+When improving memory quality:
 
-The AI will pick this up, review recent logs, and update long-term memory — like a human reviewing their journal and updating their mental model.
+1. Keep `memory/YYYY-MM-DD.md` loose and capture-oriented
+2. Distill durable facts, decisions, preferences, and lessons into `MEMORY.md`
+3. Move project-specific detail into project notes instead of bloating `MEMORY.md`
+4. Archive stale or superseded operational notes instead of endlessly appending
+5. Ensure important notes link back to related concepts, people, or projects
 
-**Schedule:** Add a heartbeat cron or configure OpenClaw's heartbeat interval. Every few days is sufficient for memory distillation.
+For decision rules on what belongs where, read `references/memory-ops.md`.
 
-## Best Practices
+## Semantic search and retrieval
 
-1. **Write it down** — if you want the AI to remember something next session, say "write this to memory" or update `memory/YYYY-MM-DD.md` directly
-2. **Keep MEMORY.md curated** — it's the distilled essence, not a dump. Short, high-signal entries.
-3. **Daily logs are raw** — `memory/YYYY-MM-DD.md` is for raw session notes; don't worry about formatting
-4. **Use directives/ for SOPs** — repeatable workflows go here so the AI can follow them consistently
-5. **Link files in Obsidian** — use `[[MEMORY]]` wiki-links to build the graph view
-6. **Re-embed after adding files** — run `qmd embed` after adding significant new content
+If the user wants semantic lookup, QMD, MCP tools, or search-friendly note structure, read `references/retrieval.md`.
 
-## Architecture Diagram
+General rules:
 
-See `assets/architecture.png` for a visual overview of how the three components interact.
+- Prefer a few high-value notes over many tiny fragmented notes
+- Use descriptive titles that will match natural-language search
+- Keep one concept per note when possible
+- Re-embed or re-index after major content changes
+- Do not assume semantic search replaces curated memory
+
+## Deliverables to produce
+
+Depending on the request, create some combination of:
+
+- improved folder structure
+- note templates
+- dashboard/index notes
+- linking conventions
+- memory-maintenance instructions
+- retrieval setup notes
+- migration plan from the current layout
+
+## Output style
+
+When explaining the setup to the user:
+
+- explain the purpose of each major folder in plain language
+- distinguish what the human uses in Obsidian from what OpenClaw reads operationally
+- call out tradeoffs if suggesting a reorganization
+- prefer concrete examples over abstract theory
