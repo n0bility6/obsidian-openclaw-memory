@@ -49,6 +49,16 @@ Annotated file tree for the Obsidian + OpenClaw memory workspace.
 │   │   └── example.md   # Deep dives on important ideas / frameworks
 │   └── documents/       # Working documents, strategies, plans
 │
+├── indexes/             # Obsidian landing pages and navigation hubs
+│   ├── home.md          # Main dashboard for the vault
+│   ├── people.md        # Map of recurring people / entities
+│   └── projects.md      # Map of active and archived projects
+│
+├── templates/           # Templater or manual note templates
+│   ├── daily-memory.md
+│   ├── project.md
+│   └── concept.md
+│
 │  ── DIRECTIVES / SOPs ─────────────────────────────────────────────
 │
 ├── directives/
@@ -125,7 +135,9 @@ Annotated file tree for the Obsidian + OpenClaw memory workspace.
 ## Obsidian-Specific Tips
 
 - Use `[[filename]]` wiki-links to create edges in the Graph View
-- Tag files with `#memory`, `#concept`, `#directive` for filtering
+- Prefer a few hub notes in `indexes/` over many disconnected orphan notes
+- Tag files sparingly; use links and folders first, tags second
 - Dataview plugin can query across all files: `TABLE file.mtime FROM "memory" SORT file.mtime DESC`
 - Set `memory/` as the daily notes folder in Obsidian settings
+- Store reusable note skeletons in `templates/`
 - Use canvas feature for visual planning that links back to notes
